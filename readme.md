@@ -80,133 +80,26 @@ sudo raspi-config
 
 5. After this, please reboot Raspberry Pi to make sure these settings work.
 
-#### Step4. Get and compile SX1302 source code
+### Step 4. Run LoRa Basics™ Station for Docker
 
-Now let's install `git` and download `sx1302_hal`(library and programs for SX1302 LoRa Gateway) from github:
-
+LoRa Basics™ Station software connects your gateway to The Things Stack or other modern LoRa Network Servers. Please follow [these instructions](https://github.com/xoseperez/basicstation-docker) to set it up for your device.
+Here is a ```docker-compose.yaml``` example to get you started:
 ```
-sudo apt update
-sudo apt install -y git
-cd ~
-git clone https://github.com/Lora-net/sx1302_hal
-```
+services:
 
-Move to `sx1302_hal` folder and compile everything:
-
-```
-cd ~/sx1302_hal
-make
-```
-
-#### Step 5. Run Semtech SX1302 packet forwarder
-
-Firstly, modify `reset pin` for SX1302 and SX1261 in `reset_lgw.sh` script, with text editor `nano`:
-
-```
-nano tools/reset_lgw.sh
-```
-
-The following code is shown at the head of text editor:
-
-```
-# GPIO mapping has to be adapted with HW
-#
-
-SX1302_RESET_PIN=23     # SX1302 reset
-SX1302_POWER_EN_PIN=18  # SX1302 power enable
-SX1261_RESET_PIN=22     # SX1261 reset (LBT / Spectral Scan)
-AD5338R_RESET_PIN=13    # AD5338R reset (full-duplex CN490 reference design)
-```
-
-Use the navigation keys to move the cursor, change `SX1302_RESET_PIN=23` to `SX1302_RESET_PIN=17` and `SX1261_RESET_PIN=22` to `SX1261_RESET_PIN=5`, as following:
-
-```
-# GPIO mapping has to be adapted with HW
-#
-
-SX1302_RESET_PIN=17     # SX1302 reset
-SX1302_POWER_EN_PIN=18  # SX1302 power enable
-SX1261_RESET_PIN=5      # SX1261 reset (LBT / Spectral Scan)
-AD5338R_RESET_PIN=13    # AD5338R reset (full-duplex CN490 reference design)
-```
-
-Save these changes by pressing `CTRL + x`, and then `y`, finally pressing `Enter` to close the text editor.
-
-Copy `reset_lgw.sh` to `packet_forwarder` folder, then run `lora_pkt_fwd`. Please note that you should select a `global_conf.json.sx1250.xxxx` config file based on the module you are using:
-
-```
-cp tools/reset_lgw.sh packet_forwarder/
-cd packet_forwarder
-
-# Please select one of the following comands based on your module
-# for WM1302 LoRaWAN Gateway Module (SPI) - EU868
-./lora_pkt_fwd -c global_conf.json.sx1250.EU868
-
-# for WM1302 LoRaWAN Gateway Module (USB) - EU868
-./lora_pkt_fwd -c global_conf.json.sx1250.EU868.USB
-
-# for WM1302 LoRaWAN Gateway Module (SPI) - US915
-./lora_pkt_fwd -c global_conf.json.sx1250.US915
-
-# for WM1302 LoRaWAN Gateway Module (USB) - US915
-./lora_pkt_fwd -c global_conf.json.sx1250.US915.USB
-```
-
-Now, packet forwarder are able to run correctly. But there are still something to do if developers need to forward lora packet to their LoRa Server(e.g. TTN or chripstack). 
-
-To achieve this target, developers must add the Raspberry Pi Gateway to Lora Server first. Take [TTNv3](https://www.thethingsindustries.com/docs/getting-started/) as an example, login [TTNv3 console](https://eu1.cloud.thethings.network/console), click `Go to gateways` and click `Add gateway`, in the `Add gateway` page you will find dozens of settings to fill. What you need to focus on are `Gateway EUI` and `Gateway Server address` and `Frequency plan`, the others just leave it to the default.
-
-- `Gateway EUI`: A 64 bit extended unique identifier for your gateway, we set it to `AA555A0000000000` in this wiki
-
-- `Gateway Server address`:  The server addresss which gateway will connect to, copy this to clipboard, developers need to save this to the config file later
-
-- `Frequency plan`:  If using EU868 module, choose `Europe 863-870 MHz (SF9 for RX2)`, if using US915 module, choose `United States 902-928 MHz, FSB 2`
-
-![](./addgateway.png)
-
-After adding gateway, back to the Raspberry Pi, press `CTRL + c` to stop `lora_pkt_fwd`, then edit the `global_conf.json.sx1250.xxxx` config file you used just now, with text editor `nano`:
-
-```
-# Please select one of the following comands based on your module
-# for WM1302 LoRaWAN Gateway Module (SPI) - EU868
-nano global_conf.json.sx1250.EU868
-
-# for WM1302 LoRaWAN Gateway Module (USB) - EU868
-nano global_conf.json.sx1250.EU868.USB
-
-# for WM1302 LoRaWAN Gateway Module (SPI) - US915
-nano global_conf.json.sx1250.US915
-
-# for WM1302 LoRaWAN Gateway Module (USB) - US915
-nano global_conf.json.sx1250.US915.USB
-```
-
-Basically, you only need to modify these parameters: `"server_address" "serv_port_up" "serv_port_down"`, which can be found at the tail of the config file. Copy `Gateway Server address` to `"server_address"`, change `"serv_port_up"` and `"serv_port_down"` to `1700`, these parameters should be edited like this: 
-
-```
-"gateway_conf": {
-    "gateway_ID": "AA555A0000000000",
-    /* change with default server address/ports */
-    "server_address": "eu1.cloud.thethings.network",
-    "serv_port_up": 1700,
-    "serv_port_down": 1700,
-```
-
-Save these changes by pressing `CTRL + x`, and then `y`, finally pressing `Enter` to close the text editor. 
-
-Restart `lora_pkt_fwd`, you will find your Raspberry Pi Gateway are conntected to TTNv3.
-
-```
-# Please select one of the following comands based on your module
-# for WM1302 LoRaWAN Gateway Module (SPI) - EU868
-./lora_pkt_fwd -c global_conf.json.sx1250.EU868
-
-# for WM1302 LoRaWAN Gateway Module (USB) - EU868
-./lora_pkt_fwd -c global_conf.json.sx1250.EU868.USB
-
-# for WM1302 LoRaWAN Gateway Module (SPI) - US915
-./lora_pkt_fwd -c global_conf.json.sx1250.US915
-
-# for WM1302 LoRaWAN Gateway Module (USB) - US915
-./lora_pkt_fwd -c global_conf.json.sx1250.US915.USB
+  basicstation:
+    image: xoseperez/basicstation:latest
+    container_name: basicstation
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+    environment:
+      MODEL: "WM1302"
+      DEVICE: "AUTO"
+      USE_LIBGPIOD: 1
+      RESET_GPIO: 17
+      POWER_EN_GPIO: 18
+      TC_KEY: "***"
+      CUPS_KEY: "***"
+      SERVER: "***"
 ```
