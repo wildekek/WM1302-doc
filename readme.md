@@ -38,13 +38,11 @@ For WM1302 LoRaWAN Gateway Module USB version, the Semtech SX1302 and SX126x chi
 
 #### Software Required
 
-- [Lastest Raspberry Pi OS image](https://www.raspberrypi.org/software/operating-systems/): Raspberry Pi OS Lite is recommended
+- [Raspberry Pi imager](https://www.raspberrypi.com/software/) to create a bootable SD card. We recommend Raspberry Pi OS Lite 64.
 
-- [Balena Etcher](https://www.balena.io/etcher/): To flash Raspberry Pi OS image to SD card
+- [Putty](https://www.putty.org/) to connect to Raspberry Pi via SSH on Windows
 
-- [putty](https://www.putty.org/): To connect to Raspberry Pi via SSH on Windows
-
-#### Step1. Mounting WM1302 Raspberry Pi Hat and install WM1302 module
+#### Step 1. Mounting WM1302 Raspberry Pi Hat and install WM1302 module
 
 It is easy to mount the Pi Hat on Raspberry Pi 40 Pin Header. Power off Raspberry Pi first, insert WM1302 module to the Pi Hat as the following picture and screw it down.
 
@@ -54,7 +52,13 @@ If USB version WM1302 module is using, please also connect its Type C port to th
 
 ![](./usbversion.jpg)
 
-#### Step2. Enable the Raspbian I2C and SPI interface
+#### Step 2. Install the OS
+
+Using the Raspberry Pi imager, select Raspberry Pi OS (other) and then Raspberry Pi OS Lite (64-bit) and select the SD card you want to use and click 'next'.
+When asked for 'OS Customization', click 'edit settings' and make sure to enable SSH in the 'services' tab. In the 'general tab', you can configure your user and WiFi if needed. Save the settings and continue to create the SD card. After the Raspberry Pi has booted from the SD card you can use SSH.
+ 
+
+#### Step 3. Enable the Raspbian I2C and SPI interface
 
 WM1302 module communicates with Raspberry Pi with SPI and I2C. But these two interfaces are not enabled by default in Raspbian, so developer need to enable them before using WM1302. Here, we introduce a command line way to enable SPI and I2C interface.
 
@@ -76,7 +80,7 @@ sudo raspi-config
 
 5. After this, please reboot Raspberry Pi to make sure these settings work.
 
-#### Step3. Get and compile SX1302 source code
+#### Step4. Get and compile SX1302 source code
 
 Now let's install `git` and download `sx1302_hal`(library and programs for SX1302 LoRa Gateway) from github:
 
@@ -94,7 +98,7 @@ cd ~/sx1302_hal
 make
 ```
 
-#### Step4. Run Semtech SX1302 packet forwarder
+#### Step 5. Run Semtech SX1302 packet forwarder
 
 Firstly, modify `reset pin` for SX1302 and SX1261 in `reset_lgw.sh` script, with text editor `nano`:
 
